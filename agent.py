@@ -95,9 +95,8 @@ class Agent():
         return action, pi, value, NN_value, id
 
     def get_preds(self, state):
-        # TODO
         # predict the leaf
-        input_to_model = np.array([self.model.state_to_input(state)]) # this needs work
+        input_to_model = np.array([state.state_to_input()])
 
         preds = self.model.predict(input_to_model)
         value_array = preds[0]
@@ -107,7 +106,7 @@ class Agent():
         logits = logits_array[0]
         # logits is the policy??
         # interesting but why not make this a layer in the policy head, just do the softmax there lol
-        allowed_actions = state.allowed_actions()
+        allowed_actions = state.valid_moves
 
         mask = np.ones(logits.shape, dtype=bool)
         mask[allowed_actions] = False
@@ -140,8 +139,6 @@ class Agent():
 
                 new_edge = Edge(leaf, node, policy[idx], action)
                 leaf.edges.append((action, new_edge))
-        else:
-            value = -value
 
         return value, id
 
@@ -196,10 +193,10 @@ class Agent():
                                 game_states.extend(f.readlines())
         return game_states
 
-    def train(self, game_states):
+    def train(self, game_states, game):
         # TODO
 
-        X_train, Y_train = self.model.convert_to_model_input(game_states)
+        X_train, Y_train = game.convert_to_model_input(game_states)
         for i in range(config.TRAINING_LOOPS):
             # minibatch = random.sample(training_set, min(config.BATCH_SIZE, len(ltmemory)))
             # we build training set before calling this function

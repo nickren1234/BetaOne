@@ -3,7 +3,7 @@ import numpy as np
 
 class Tictactoe:
     def __init__(self, id):
-        self.state = TState(id)
+        self.state = State(id)
         self.turn = 1 # -1 -> o, 1 -> x
         self.input_dim = (3, 3, 3)
         self.policy_dim = 9
@@ -16,8 +16,28 @@ class Tictactoe:
 
         return self.state, self.state.value, self.state.ended
 
+    def convert_to_model_input(self, game_states):
+        X_train = []
+        Y_train = {'value_head': [],
+                   'policy_head': []}
+        for game in game_states:
+            board, pi, turn, value = game.split(',')
+            board_plane = np.zeros((2, 3, 3))
+            for idx, char in enumerate(board):
+                if char == '1':
+                    board_plane[0][int(idx / 3)][idx % 3] = 1
+                elif char == '2':
+                    board_plane[1][int(idx / 3)][idx % 3] = -1
+            turn_plane = np.full((1, 3, 3), int(turn))
+            X_train.append(np.vstack([board_plane, turn_plane]))
+            Y_train['value_head'].append(float(value))
+            Y_train['policy_head'].append([float(val) for val in pi.split(' ')[1:]])
+        Y_train['value_head'] = np.array(Y_train['value_head'])
+        Y_train['policy_head'] = np.array(Y_train['policy_head'])
+        return np.array(X_train), Y_train
 
-class TState:
+
+class State:
     def __init__(self, id, board=None, turn=None):
         if board is None:
             self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -39,7 +59,7 @@ class TState:
             [0, 4, 8],
             [2, 4, 6]
         ]
-        # self.binary = self._binary()
+
         self.id = id
         self.valid_moves = self._valid_moves()
         self.ended = self._check_game_end()
@@ -61,19 +81,6 @@ class TState:
                 moves.append(i)
         return moves
 
-    def _state_to_id(self):
-        # this is not used :p
-        player1_position = np.zeros(len(self.board), dtype=np.int)
-        player1_position[self.board == 1] = 1
-
-        other_position = np.zeros(len(self.board), dtype=np.int)
-        other_position[self.board == -1] = 1
-
-        position = np.append(player1_position, other_position)
-
-        id = ''.join(map(str, position))
-        return id
-
     def _get_value(self):
         # todo
         # This is the value of the state for the player who is about to move
@@ -81,21 +88,14 @@ class TState:
         # i.e. if the previous player played a winning move, you lose
         for x, y, z in self.winners:
             if self.board[x] + self.board[y] + self.board[z] == 3 * -self.turn:
-                return 1
+                return -1
         return 0
-
-    def allowed_actions(self):
-        actions = []
-        for idx, val in enumerate(self.board):
-            if val == 0:
-                actions.append(idx)
-        return actions
 
     def take_action(self, action, id):
         new_board = np.array(self.board)
         new_board[action] = self.turn
 
-        new_state = TState(id, new_board, -self.turn)
+        new_state = State(id, new_board, -self.turn)
 
         return new_state
 
@@ -110,4 +110,25 @@ class TState:
         print(to_print[3] + '|' + to_print[4] + '|' + to_print[5])
         print('-+-+-')
         print(to_print[6] + '|' + to_print[7] + '|' + to_print[8])
+
+    def convert_to_record(self):
+        plain_text = ''
+        for x in self.board:
+            if x == -1:
+                plain_text += '2'
+            else:
+                plain_text += str(x)
+        plain_text += ','
+        return plain_text
+
+    def state_to_input(self):
+        board_plane = np.zeros((2, 3, 3))
+        for idx, val in enumerate(self.board):
+            if val == 1:
+                board_plane[0][int(idx / 3)][idx % 3] = 1
+            elif val == -1:
+                board_plane[1][int(idx / 3)][idx % 3] = 1
+        turn_plane = np.full((1, 3, 3), self.turn)
+        return np.vstack([board_plane, turn_plane])
+
 

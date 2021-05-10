@@ -1,6 +1,7 @@
 from tensorflow.keras.utils import plot_model
 
-from tictactoe import Tictactoe, TState
+# from tictactoe import Tictactoe, State
+from gomoku import Gomoku, State
 from agent import Agent
 from model import Res_CNN
 from play import play_matches
@@ -11,7 +12,8 @@ import config
 
 if __name__ == '__main__':
     id_count = 1
-    game = Tictactoe(id_count)
+    # game = Tictactoe(id_count)
+    game = Gomoku(id_count)
     cur_model = Res_CNN(config.REG, config.LEARNING_RATE, game.input_dim, game.policy_dim, config.MODEL_ARCH)
     best_model = Res_CNN(config.REG, config.LEARNING_RATE, game.input_dim, game.policy_dim, config.MODEL_ARCH)
 
@@ -32,7 +34,7 @@ if __name__ == '__main__':
     cur_agent = Agent('cur_agent', game.input_dim, game.policy_dim, config.MCTS_CYCLES, config.CPUCT, cur_model)
     best_agent = Agent('best_agent', game.input_dim, game.policy_dim, config.MCTS_CYCLES, config.CPUCT, best_model)
 
-    for i in range(4):
+    for i in range(5):
         print('Starting iteration ' + str(i))
         print('Best version: ' + str(best_version))
 
@@ -41,13 +43,13 @@ if __name__ == '__main__':
 
         # now we train the model with the games we just played
         game_states = cur_agent.build_training_set(records)
-        cur_agent.train(game_states)
+        cur_agent.train(game_states, game)
 
         # compare the new agent with the best agent
         scores, _, points, sp_scores, id_count = play_matches(best_agent, cur_agent, config.SELF_PLAY_GAMES, config.TURNS_UNTIL_TAU0, id_count)
-        print(f"best agent won {scores['best_agent']}, currrent agent won {scores['cur_agent']}, {scores['drawn']} games drawn")
+        print(f"best agent won {scores['best_agent']}, current agent won {scores['cur_agent']}, {scores['drawn']} games drawn")
         print(f"1st agent won {sp_scores['sp']}, 2nd agent won {sp_scores['nsp']}, {sp_scores['drawn']} games drawn")
-        if scores['cur_agent'] > scores['best_agent'] + 1:
+        if scores['cur_agent'] > scores['best_agent'] * 1.22:
             # if new player wins 55% or more ignoring draws
             # 45 * 1.22 = 54.9
             # since we are only doing 20 games, we will say 2 more wins is good enough
@@ -60,12 +62,12 @@ if __name__ == '__main__':
         print(f'best version is now {best_version}')
 
     '''
-    test_states = [TState(1, [1, -1, 0, 0, 1, 0, 0, 0, -1], 1)]  # this position is won for 1, if pos 5 or 6 is played
-    test_states.append(TState(2, [1, -1, 0, 0, 1, 0, 1, 0, -1], -1))  # this position is lost for -1 but it should play 2 or 3
-    test_states.append(TState(3, [1, 1, -1, -1, -1, 0, 1, 0, 0], 1))  # this position should be a draw, it must play 5
-    test_states.append(TState(4, [1, 1, -1, 0, -1, 0, 0, 0, 0], 1))  # should be a draw, but 6 must be played
-    test_states.append(TState(5, [0, -1, 0, 0, 1, 0, 0, 0, 0], 1))  # should be won for 1 if 7 is not played
-    test_states.append(TState(6, [1, -1, 0, 0, 1, 0, 0, 0, 0], -1))  # should be lost for -1 but play 8 to delay
+    test_states = [State(1, [1, -1, 0, 0, 1, 0, 0, 0, -1], 1)]  # this position is won for 1, if pos 5 or 6 is played
+    test_states.append(State(2, [1, -1, 0, 0, 1, 0, 1, 0, -1], -1))  # this position is lost for -1 but it should play 2 or 3
+    test_states.append(State(3, [1, 1, -1, -1, -1, 0, 1, 0, 0], 1))  # this position should be a draw, it must play 5
+    test_states.append(State(4, [1, 1, -1, 0, -1, 0, 0, 0, 0], 1))  # should be a draw, but 6 must be played
+    test_states.append(State(5, [0, -1, 0, 0, 1, 0, 0, 0, 0], 1))  # should be won for 1 if 7 is not played
+    test_states.append(State(6, [1, -1, 0, 0, 1, 0, 0, 0, 0], -1))  # should be lost for -1 but play 8 to delay
     for state in test_states:
         print(best_agent.get_preds(state))
     '''

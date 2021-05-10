@@ -135,13 +135,6 @@ class Res_CNN(My_Model):
         x = Flatten()(x)
 
         x = Dense(
-            self.output_dim*5,
-            use_bias=False,
-            activation='linear',
-            kernel_regularizer=regularizers.l2(self.reg_const),
-        )(x) # remember that this is for tictactoe only
-
-        x = Dense(
             self.output_dim,
             use_bias=False,
             activation='linear',
@@ -172,36 +165,6 @@ class Res_CNN(My_Model):
 
         return model
 
-    def convert_to_model_input(self, game_states):
-        # this takes records format (strings)
-        X_train = []
-        Y_train = {'value_head': [],
-                   'policy_head': []}
-        for game in game_states:
-            board, pi, turn, value = game.split(',')
-            board_plane = np.zeros((2, 3, 3))
-            for idx, char in enumerate(board):
-                if char == '1':
-                    board_plane[0][int(idx/3)][idx%3] = 1
-                elif char == '2':
-                    board_plane[1][int(idx/3)][idx%3] = -1
-            turn_plane = np.full((1, 3, 3), int(turn))
-            X_train.append(np.vstack([board_plane, turn_plane]))
-            Y_train['value_head'].append(float(value))
-            Y_train['policy_head'].append([float(val) for val in pi.split(' ')[1:]])
-        Y_train['value_head'] = np.array(Y_train['value_head'])
-        Y_train['policy_head'] = np.array(Y_train['policy_head'])
-        return np.array(X_train), Y_train
 
-    def state_to_input(self, state):
-        # this takes in A SINGLE TState (the game states directly)
-        board_plane = np.zeros((2, 3, 3))
-        for idx, val in enumerate(state.board):
-            if val == 1:
-                board_plane[0][int(idx/3)][idx%3] = 1
-            else:
-                board_plane[1][int(idx/3)][idx % 3] = 1
-        turn_plane = np.full((1, 3, 3), state.turn)
-        return np.vstack([board_plane, turn_plane])
 
 

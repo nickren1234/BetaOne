@@ -26,13 +26,7 @@ class Records():
     def append(self, state, pi):
         # string is board,pi,turn and then value will be appended after mcts
         # and the turn is 0 and 1 instead of -1 and 1
-        plain_text = ''
-        for x in state.board:
-            if x == -1:
-                plain_text += '2'
-            else:
-                plain_text += str(x)
-        plain_text += ','
+        plain_text = state.convert_to_record()
         for x in pi:
             plain_text += ' ' + str(x)
         plain_text += ',' + str(max(state.turn, 0))

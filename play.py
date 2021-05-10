@@ -1,11 +1,12 @@
 import random
-from tictactoe import Tictactoe
-
+# from tictactoe import Tictactoe
+from gomoku import Gomoku
 
 
 def play_one_game(player1, player2, turns_until_tau0, records, id):
     id += 1
-    game = Tictactoe(id)
+    # game = Tictactoe(id)
+    game = Gomoku(id)
     state = game.state
     done = 0
     turn = 0
@@ -69,29 +70,21 @@ def play_matches(player1, player2, EPISODES, turns_until_tau0, id, records=None)
         state.print_board()
 
         if value == 1: # dont think this is ever 1, maybe delete later
-            if state.turn == 1:
-                if p1_goes_first:
-                    scores[player2.name] += 1
-                else:
-                    scores[player1.name] += 1
-                sp_scores['nsp'] = sp_scores['nsp'] + 1
-            else:
-                if p1_goes_first:
-                    scores[player1.name] += 1
-                else:
-                    scores[player2.name] += 1
-                sp_scores['sp'] = sp_scores['sp'] + 1
+            print("WOAH WTF IS GOING ON")
 
         elif value == -1:
-            print("WOAH WTF IS GOING ON")
-            '''
             if state.turn == 1:
-                scores[player2.name] += 1
+                if p1_goes_first:
+                    scores[player2.name] += 1
+                else:
+                    scores[player1.name] += 1
                 sp_scores['nsp'] = sp_scores['nsp'] + 1
             else:
-                scores[player1.name] += 1
+                if p1_goes_first:
+                    scores[player1.name] += 1
+                else:
+                    scores[player2.name] += 1
                 sp_scores['sp'] = sp_scores['sp'] + 1
-            '''
 
         else:
             # logger.info('DRAW...')
